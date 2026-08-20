@@ -1,0 +1,119 @@
+/*
+  ========================================================================================
+  Zoho CRM Deluge Script: Lead to Student Automated Admission Conversion & Unique ID Generator
+  Module: Leads (Triggered on Record Edit when Lead_Status == 'Admission Confirmed')
+  ========================================================================================
+*/
+
+void convertLeadToStudent(BigInt leadId)
+{
+    // 1. Fetch Lead Record Details
+    leadRecord = zoho.crm.getRecordById("Leads", leadId);
+    
+    if (leadRecord != null && leadRecord.get("Lead_Status") == "Admission Confirmed")
+    {
+        parentEmail = leadRecord.get("Email");
+        parentName = leadRecord.get("Parent_Name");
+        studentFirstName = leadRecord.get("First_Name");
+        studentLastName = leadRecord.get("Last_Name");
+        dob = leadRecord.get("Date_of_Birth");
+        gender = leadRecord.get("Gender");
+        gradeApplying = leadRecord.get("Grade_Applying_For");
+        academicYearLookup = leadRecord.get("Academic_Year_Applying");
+        parentPhone = leadRecord.get("Phone");
+        address = leadRecord.get("Address");
+        
+        // 2. Check if Parent Account already exists by Email
+        parentAccountId = null;
+        searchParent = zoho.crm.searchRecords("Parents_Accounts", "(Primary_Email:equals:" + parentEmail + ")");
+        
+        if (searchParent.size() > 0)
+        {
+            parentAccountObj = searchParent.get(0);
+            parentAccountId = parentAccountObj.get("id");
+        }
+        else
+        {
+            // Create New Parent Account
+            parentMap = Map();
+            parentMap.put("Account_Name", parentName + " Family");
+            parentMap.put("Father_Name", parentName);
+            parentMap.put("Primary_Email", parentEmail);
+            parentMap.put("Primary_Phone", parentPhone);
+            parentMap.put("Address", address);
+            parentMap.put("Portal_Access_Enabled", true);
+            
+            createParentResp = zoho.crm.createRecord("Parents_Accounts", parentMap);
+            parentAccountId = createParentResp.get("id");
+        }
+        
+        // 3. Auto-Generate Unique Student ID (Format: STU-YYYY-XXXX)
+        currentYearStr = zoho.currentdate.getYear().toString();
+        // Fetch count of current active students to derive sequential number
+        existingStudents = zoho.crm.getRecords("Students", 1, 100);
+        seqNumber = existingStudents.size() + 1;
+        formattedSeq = seqNumber.toString();
+        
+        // Pad sequence number to 4 digits
+        if (formattedSeq.len() == 1) { formattedSeq = "000" + formattedSeq; }
+        else if (formattedSeq.len() == 2) { formattedSeq = "00" + formattedSeq; }
+        else if (formattedSeq.len() == 3) { formattedSeq = "0" + formattedSeq; }
+        
+        newStudentID = "STU-" + currentYearStr + "-" + formattedSeq;
+        
+        // 4. Map Class Lookup (Find Class Record corresponding to gradeApplying)
+        classLookupId = null;
+        searchClass = zoho.crm.searchRecords("Classes", "(Class_Name:equals:" + gradeApplying + ")");
+        if (searchClass.size() > 0)
+        {
+            classLookupId = searchClass.get(0).get("id");
+        }
+        
+        // 5. Create Master Student Record
+        studentMap = Map();
+        studentMap.put("Student_ID", newStudentID);
+        studentMap.put("First_Name", studentFirstName);
+        studentMap.put("Last_Name", studentLastName);
+        studentMap.put("Full_Name", studentFirstName + " " + studentLastName);
+        studentMap.put("Date_of_Birth", dob);
+        studentMap.put("Gender", gender);
+        studentMap.put("Parent_Account", parentAccountId);
+        studentMap.put("Parent_Email", parentEmail);
+        studentMap.put("Current_Class", classLookupId);
+        studentMap.put("Admission_Date", zoho.currentdate);
+        studentMap.put("Student_Status", "Active");
+        studentMap.put("Attendance_Percentage", 100.0);
+        studentMap.put("Current_GPA", 0.0);
+        studentMap.put("Fee_Status", "Pending Initial Fee");
+        
+        createStudentResp = zoho.crm.createRecord("Students", studentMap);
+        newStudentCRMId = createStudentResp.get("id");
+        
+        // 6. Automatically generate Default Fee Structure Schedule if class fee exists
+        searchFeeStruct = zoho.crm.searchRecords("Fee_Structures", "(Class:equals:" + classLookupId + ")");
+        if (searchFeeStruct.size() > 0)
+        {
+            feeStructObj = searchFeeStruct.get(0);
+            totalAnnualFee = feeStructObj.get("Total_Annual_Fee");
+            
+            // Update Student Fee Summary
+            updateStuFee = Map();
+            updateStuFee.put("Total_Fee_Amount", totalAnnualFee);
+            updateStuFee.put("Fee_Paid_Amount", 0.0);
+            updateStuFee.put("Outstanding_Fee_Balance", totalAnnualFee);
+            zoho.crm.updateRecord("Students", newStudentCRMId, updateStuFee);
+        }
+        
+        // 7. Update Lead Status & Add Note
+        updateLeadMap = Map();
+        updateLeadMap.put("Lead_Status", "Converted / Enrolled");
+        zoho.crm.updateRecord("Leads", leadId, updateLeadMap);
+        
+        noteMap = Map();
+        noteMap.put("Parent_Id", leadId);
+        noteMap.put("Se_module", "Leads");
+        noteMap.put("Note_Title", "Admission Converted Successfully");
+        noteMap.put("Note_Content", "Student record created with ID: " + newStudentID + ". Parent Account ID: " + parentAccountId);
+        zoho.crm.createRecord("Notes", noteMap);
+    }
+}

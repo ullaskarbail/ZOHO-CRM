@@ -1,0 +1,114 @@
+/*
+  ========================================================================================
+  Zoho CRM Deluge Script: Exam Result Validation, Auto-Grading & Student GPA Rollup
+  Module: Student_Exam_Results (Triggered on Create / Update)
+  ========================================================================================
+*/
+
+void processExamResultGrading(BigInt examResultId)
+{
+    // 1. Fetch Exam Result Record
+    resultRecord = zoho.crm.getRecordById("Student_Exam_Results", examResultId);
+    
+    if (resultRecord != null)
+    {
+        marksObtained = resultRecord.get("Marks_Obtained").toDecimal();
+        maxMarks = resultRecord.get("Max_Marks").toDecimal();
+        studentObj = resultRecord.get("Student");
+        studentId = studentObj.get("id");
+        
+        // 2. Validate Marks Obtained
+        if (marksObtained > maxMarks)
+        {
+            // Correction override if validation missed
+            marksObtained = maxMarks;
+        }
+        if (marksObtained < 0)
+        {
+            marksObtained = 0.0;
+        }
+        
+        // 3. Compute Percentage Score
+        pctScore = (marksObtained / maxMarks) * 100.0;
+        pctScoreRounded = pctScore.round(2);
+        
+        // 4. Determine Grade, GPA Point & Pass/Fail Status
+        grade = "F";
+        gpaPoint = 0.0;
+        passFailStatus = "Fail";
+        
+        if (pctScoreRounded >= 90.0)
+        {
+            grade = "A+";
+            gpaPoint = 4.0;
+            passFailStatus = "Pass";
+        }
+        else if (pctScoreRounded >= 80.0)
+        {
+            grade = "A";
+            gpaPoint = 3.7;
+            passFailStatus = "Pass";
+        }
+        else if (pctScoreRounded >= 70.0)
+        {
+            grade = "B";
+            gpaPoint = 3.0;
+            passFailStatus = "Pass";
+        }
+        else if (pctScoreRounded >= 60.0)
+        {
+            grade = "C";
+            gpaPoint = 2.0;
+            passFailStatus = "Pass";
+        }
+        else if (pctScoreRounded >= 50.0)
+        {
+            grade = "D";
+            gpaPoint = 1.0;
+            passFailStatus = "Pass";
+        }
+        else
+        {
+            grade = "F";
+            gpaPoint = 0.0;
+            passFailStatus = "Fail";
+        }
+        
+        // 5. Update Exam Result Record
+        updateResultMap = Map();
+        updateResultMap.put("Percentage_Score", pctScoreRounded);
+        updateResultMap.put("Grade", grade);
+        updateResultMap.put("GPA_Point", gpaPoint);
+        updateResultMap.put("Pass_Fail_Status", passFailStatus);
+        
+        zoho.crm.updateRecord("Student_Exam_Results", examResultId, updateResultMap);
+        
+        // 6. Recalculate Student Overall Cumulative GPA
+        if (studentId != null)
+        {
+            allResults = zoho.crm.searchRecords("Student_Exam_Results", "(Student:equals:" + studentId + ")");
+            
+            totalGpaPoints = 0.0;
+            subjectCount = allResults.size();
+            
+            if (subjectCount > 0)
+            {
+                for each res in allResults
+                {
+                    resGpa = res.get("GPA_Point");
+                    if (resGpa != null)
+                    {
+                        totalGpaPoints = totalGpaPoints + resGpa.toDecimal();
+                    }
+                }
+                
+                cumulativeGPA = (totalGpaPoints / subjectCount).round(2);
+                
+                // Update Student Master Record
+                updateStudentMap = Map();
+                updateStudentMap.put("Current_GPA", cumulativeGPA);
+                zoho.crm.updateRecord("Students", studentId, updateStudentMap);
+            }
+        }
+    }
+}

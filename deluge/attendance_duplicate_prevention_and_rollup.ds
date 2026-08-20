@@ -1,0 +1,83 @@
+/*
+  ========================================================================================
+  Zoho CRM Deluge Script: Attendance Duplicate Record Prevention & Auto-Rollup Engine
+  Module: Daily_Attendance (Pre-save validation & Post-save rollup to Students module)
+  ========================================================================================
+*/
+
+// ========================================================================================
+// 1. BEFORE SAVE VALIDATION: Prevent Duplicate Attendance for Same Student & Date
+// ========================================================================================
+string validateDailyAttendanceEntry(BigInt attendanceId, BigInt studentId, string attendanceDateStr)
+{
+    // Search existing attendance for same student and date
+    criteriaStr = "((Student:equals:" + studentId + ")and(Attendance_Date:equals:" + attendanceDateStr + "))";
+    existingLogs = zoho.crm.searchRecords("Daily_Attendance", criteriaStr);
+    
+    isDuplicate = false;
+    for each log in existingLogs
+    {
+        currentLogId = log.get("id");
+        if (currentLogId != attendanceId)
+        {
+            isDuplicate = true;
+            break;
+        }
+    }
+    
+    if (isDuplicate)
+    {
+        return "ERROR: Attendance for this student on " + attendanceDateStr + " has already been recorded! Duplicates are not allowed.";
+    }
+    
+    return "SUCCESS";
+}
+
+
+// ========================================================================================
+// 2. POST-SAVE ROLLUP: Recalculate Student Overall Attendance Percentage
+// ========================================================================================
+void calculateStudentAttendancePercentage(BigInt studentId)
+{
+    if (studentId != null)
+    {
+        // Fetch all attendance logs for this student
+        criteriaStr = "(Student:equals:" + studentId + ")";
+        allAttendanceLogs = zoho.crm.searchRecords("Daily_Attendance", criteriaStr, 1, 200);
+        
+        totalDays = allAttendanceLogs.size();
+        presentCount = 0.0;
+        
+        if (totalDays > 0)
+        {
+            for each record in allAttendanceLogs
+            {
+                status = record.get("Status");
+                if (status == "Present")
+                {
+                    presentCount = presentCount + 1.0;
+                }
+                else if (status == "Late")
+                {
+                    // Credit 0.75 day for late attendance
+                    presentCount = presentCount + 0.75;
+                }
+                else if (status == "Excused Absence")
+                {
+                    // Credit 1.0 day for official excused leave
+                    presentCount = presentCount + 1.0;
+                }
+            }
+            
+            // Calculate percentage rounded to 2 decimal places
+            attendancePct = (presentCount / totalDays) * 100.0;
+            attendancePctRounded = attendancePct.round(2);
+            
+            // Update Students module with fresh calculated percentage
+            updateStudentMap = Map();
+            updateStudentMap.put("Attendance_Percentage", attendancePctRounded);
+            
+            zoho.crm.updateRecord("Students", studentId, updateStudentMap);
+        }
+    }
+}

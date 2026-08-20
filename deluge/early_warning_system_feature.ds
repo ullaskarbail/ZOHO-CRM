@@ -1,0 +1,129 @@
+/*
+  ========================================================================================
+  Zoho CRM Deluge Script: Student Academic & Behavioral Early Warning System (EWS)
+  Execution: Scheduled Cron Task (Runs Every Monday 06:00 AM)
+  Description: Evaluates student risk based on attendance drops, academic performance, 
+               and fee defaults. Auto-generates intervention tasks and sends parent alerts.
+  ========================================================================================
+*/
+
+void runEarlyWarningSystemEngine()
+{
+    // Fetch all active students (batching max 200 per page)
+    studentsList = zoho.crm.searchRecords("Students", "(Student_Status:equals:Active)", 1, 200);
+    
+    for each student in studentsList
+    {
+        studentId = student.get("id");
+        studentName = student.get("Full_Name");
+        studentCode = student.get("Student_ID");
+        parentEmail = student.get("Parent_Email");
+        attendancePct = student.get("Attendance_Percentage");
+        currentGpa = student.get("Current_GPA");
+        feeStatus = student.get("Fee_Status");
+        outstandingFee = student.get("Outstanding_Fee_Balance");
+        totalFee = student.get("Total_Fee_Amount");
+        
+        if (attendancePct == null) { attendancePct = 100.0; } else { attendancePct = attendancePct.toDecimal(); }
+        if (currentGpa == null) { currentGpa = 4.0; } else { currentGpa = currentGpa.toDecimal(); }
+        if (outstandingFee == null) { outstandingFee = 0.0; } else { outstandingFee = outstandingFee.toDecimal(); }
+        if (totalFee == null) { totalFee = 0.0; } else { totalFee = totalFee.toDecimal(); }
+        
+        riskScore = 0;
+        
+        // --------------------------------------------------------------------------------
+        // Component A: Attendance Risk Weight (Max 40 points)
+        // Benchmark: Attendance should be >= 85%
+        // --------------------------------------------------------------------------------
+        if (attendancePct < 85.0)
+        {
+            attendanceDeficit = 85.0 - attendancePct;
+            attRiskPts = (attendanceDeficit * 1.5).toInteger();
+            if (attRiskPts > 40) { attRiskPts = 40; }
+            riskScore = riskScore + attRiskPts;
+        }
+        
+        // --------------------------------------------------------------------------------
+        // Component B: Academic Performance Weight (Max 40 points)
+        // Benchmark: GPA should be >= 2.5 (on a 4.0 scale)
+        // --------------------------------------------------------------------------------
+        if (currentGpa < 2.5)
+        {
+            gpaDeficit = 2.5 - currentGpa;
+            acadRiskPts = (gpaDeficit * 16.0).toInteger();
+            if (acadRiskPts > 40) { acadRiskPts = 40; }
+            riskScore = riskScore + acadRiskPts;
+        }
+        
+        // --------------------------------------------------------------------------------
+        // Component C: Fee Payment Risk Weight (Max 20 points)
+        // --------------------------------------------------------------------------------
+        if (feeStatus == "Overdue")
+        {
+            riskScore = riskScore + 20;
+        }
+        else if (totalFee > 0 && (outstandingFee / totalFee) > 0.5)
+        {
+            riskScore = riskScore + 10;
+        }
+        
+        // --------------------------------------------------------------------------------
+        // Determine Risk Category
+        // --------------------------------------------------------------------------------
+        riskCategory = "Low";
+        if (riskScore >= 55)
+        {
+            riskCategory = "High / Critical";
+        }
+        else if (riskScore >= 25)
+        {
+            riskCategory = "Moderate";
+        }
+        
+        // Update Student Record with EWS Risk Metrics
+        updateRiskMap = Map();
+        updateRiskMap.put("Early_Warning_Risk_Score", riskScore);
+        updateRiskMap.put("Early_Warning_Level", riskCategory);
+        zoho.crm.updateRecord("Students", studentId, updateRiskMap);
+        
+        // --------------------------------------------------------------------------------
+        // Automated Intervention Workflow for High / Critical Risk Students
+        // --------------------------------------------------------------------------------
+        if (riskCategory == "High / Critical" || riskCategory == "Moderate")
+        {
+            // 1. Create Task for Academic Counselor / Class Teacher
+            taskMap = Map();
+            taskMap.put("Subject", "EWS ALERT: Academic & Behavioral Follow-up for " + studentName + " (" + studentCode + ")");
+            taskMap.put("DueDate", zoho.currentdate.addDay(3));
+            taskMap.put("Status", "Not Started");
+            taskMap.put("Priority", "High");
+            taskMap.put("SEModule", "Students");
+            taskMap.put("What_Id", studentId);
+            taskMap.put("Description", "Automated EWS Trigger: Student Risk Score is " + riskScore + "/100 (" + riskCategory + "). Attendance: " + attendancePct + "%, GPA: " + currentGpa + ", Fee Status: " + feeStatus + ". Immediate counseling session required.");
+            
+            zoho.crm.createRecord("Tasks", taskMap);
+            
+            // 2. Dispatch Parent Advisory Email Notification
+            if (parentEmail != null && parentEmail != "")
+            {
+                emailSubject = "School Notification: Academic Standing Update for " + studentName;
+                emailBody = "Dear Parent / Guardian,\n\n"
+                          + "This is an automated performance advisory from the School Administration regarding your child, " + studentName + " (Student ID: " + studentCode + ").\n\n"
+                          + "Current Standing Summary:\n"
+                          + "- Attendance Percentage: " + attendancePct + "%\n"
+                          + "- Current Term GPA: " + currentGpa + " / 4.0\n"
+                          + "- Fee Payment Status: " + feeStatus + "\n\n"
+                          + "Our Academic Counseling team has scheduled an advisory check-in. Please log into the Parent Portal (Zoho Creator) to review detailed report cards or contact the school office.\n\n"
+                          + "Warm regards,\nSchool Administration";
+                
+                sendmail
+                [
+                    from: zoho.adminemail
+                    to: parentEmail
+                    subject: emailSubject
+                    message: emailBody
+                ];
+            }
+        }
+    }
+}

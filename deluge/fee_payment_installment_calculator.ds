@@ -1,0 +1,67 @@
+/*
+  ========================================================================================
+  Zoho CRM Deluge Script: Fee Installment Payment & Outstanding Balance Rollup Engine
+  Module: Fee_Payments (Triggered on Record Create / Update)
+  ========================================================================================
+*/
+
+void recalculateStudentFeeBalance(BigInt paymentId)
+{
+    paymentRecord = zoho.crm.getRecordById("Fee_Payments", paymentId);
+    
+    if (paymentRecord != null)
+    {
+        studentObj = paymentRecord.get("Student");
+        studentId = studentObj.get("id");
+        
+        if (studentId != null)
+        {
+            // 1. Fetch Master Student Record
+            studentRecord = zoho.crm.getRecordById("Students", studentId);
+            totalAnnualFee = studentRecord.get("Total_Fee_Amount");
+            if (totalAnnualFee == null) { totalAnnualFee = 0.0; }
+            else { totalAnnualFee = totalAnnualFee.toDecimal(); }
+            
+            // 2. Fetch all successful Fee Payments for this Student
+            criteriaStr = "((Student:equals:" + studentId + ")and(Transaction_Status:equals:Success))";
+            allPayments = zoho.crm.searchRecords("Fee_Payments", criteriaStr, 1, 200);
+            
+            totalPaidAmount = 0.0;
+            for each pay in allPayments
+            {
+                amt = pay.get("Amount_Paid");
+                if (amt != null)
+                {
+                    totalPaidAmount = totalPaidAmount + amt.toDecimal();
+                }
+            }
+            
+            // 3. Compute Outstanding Balance
+            outstandingBalance = totalAnnualFee - totalPaidAmount;
+            if (outstandingBalance < 0) { outstandingBalance = 0.0; }
+            
+            // 4. Determine Fee Payment Status
+            feeStatus = "Pending Initial Fee";
+            if (totalPaidAmount >= totalAnnualFee && totalAnnualFee > 0)
+            {
+                feeStatus = "Paid";
+            }
+            else if (totalPaidAmount > 0 && outstandingBalance > 0)
+            {
+                feeStatus = "Partially Paid";
+            }
+            else if (totalPaidAmount == 0 && totalAnnualFee > 0)
+            {
+                feeStatus = "Overdue";
+            }
+            
+            // 5. Update Student Master Record
+            updateStudentMap = Map();
+            updateStudentMap.put("Fee_Paid_Amount", totalPaidAmount.round(2));
+            updateStudentMap.put("Outstanding_Fee_Balance", outstandingBalance.round(2));
+            updateStudentMap.put("Fee_Status", feeStatus);
+            
+            zoho.crm.updateRecord("Students", studentId, updateStudentMap);
+        }
+    }
+}

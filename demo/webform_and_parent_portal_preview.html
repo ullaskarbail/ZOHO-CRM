@@ -1,0 +1,882 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>School Management System - Zoho CRM & Creator Interactive Showcase</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;500;600;700&family=Plus+Jakarta+Sans:wght@400;500;600;700&display=swap" rel="stylesheet">
+  <style>
+    :root {
+      --bg-dark: #0a0e1a;
+      --card-bg: rgba(20, 27, 45, 0.75);
+      --card-border: rgba(255, 255, 255, 0.08);
+      --primary: #4f46e5;
+      --primary-glow: rgba(79, 70, 229, 0.35);
+      --accent: #06b6d4;
+      --accent-glow: rgba(6, 182, 212, 0.3);
+      --success: #10b981;
+      --warning: #f59e0b;
+      --danger: #ef4444;
+      --text-main: #f3f4f6;
+      --text-muted: #9ca3af;
+      --font-heading: 'Outfit', sans-serif;
+      --font-body: 'Plus Jakarta Sans', sans-serif;
+    }
+
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+    body {
+      background-color: var(--bg-dark);
+      background-image: 
+        radial-gradient(at 10% 10%, rgba(79, 70, 229, 0.15) 0px, transparent 50%),
+        radial-gradient(at 90% 90%, rgba(6, 182, 212, 0.15) 0px, transparent 50%);
+      color: var(--text-main);
+      font-family: var(--font-body);
+      min-height: 100vh;
+      display: flex;
+      flex-direction: column;
+    }
+
+    header {
+      background: rgba(10, 14, 26, 0.85);
+      backdrop-filter: blur(12px);
+      border-bottom: 1px solid var(--card-border);
+      padding: 1rem 2rem;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      position: sticky;
+      top: 0;
+      z-index: 100;
+    }
+
+    .brand {
+      display: flex;
+      align-items: center;
+      gap: 0.75rem;
+    }
+
+    .brand-logo {
+      width: 40px;
+      height: 40px;
+      border-radius: 10px;
+      background: linear-gradient(135deg, var(--primary), var(--accent));
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-weight: 700;
+      font-size: 1.2rem;
+      box-shadow: 0 0 15px var(--primary-glow);
+    }
+
+    .brand-title {
+      font-family: var(--font-heading);
+      font-size: 1.25rem;
+      font-weight: 600;
+    }
+    .brand-subtitle {
+      font-size: 0.75rem;
+      color: var(--text-muted);
+    }
+
+    .nav-tabs {
+      display: flex;
+      gap: 0.5rem;
+      background: rgba(255, 255, 255, 0.04);
+      padding: 0.35rem;
+      border-radius: 12px;
+      border: 1px solid var(--card-border);
+    }
+
+    .nav-btn {
+      background: transparent;
+      border: none;
+      color: var(--text-muted);
+      padding: 0.6rem 1.2rem;
+      border-radius: 8px;
+      font-family: var(--font-body);
+      font-weight: 500;
+      cursor: pointer;
+      transition: all 0.2s ease;
+      display: flex;
+      align-items: center;
+      gap: 0.5rem;
+    }
+
+    .nav-btn:hover {
+      color: var(--text-main);
+    }
+
+    .nav-btn.active {
+      background: linear-gradient(135deg, var(--primary), #3b82f6);
+      color: #fff;
+      box-shadow: 0 4px 12px var(--primary-glow);
+    }
+
+    main {
+      flex: 1;
+      padding: 2rem;
+      max-width: 1400px;
+      margin: 0 auto;
+      width: 100%;
+    }
+
+    .tab-content { display: none; }
+    .tab-content.active { display: block; animation: fadeIn 0.3s ease; }
+
+    @keyframes fadeIn {
+      from { opacity: 0; transform: translateY(6px); }
+      to { opacity: 1; transform: translateY(0); }
+    }
+
+    /* Grid Layouts */
+    .grid-2 { display: grid; grid-template-columns: 1fr 1fr; gap: 1.5rem; }
+    .grid-3 { display: grid; grid-template-columns: repeat(3, 1fr); gap: 1.5rem; }
+    .grid-4 { display: grid; grid-template-columns: repeat(4, 1fr); gap: 1rem; }
+
+    @media (max-width: 992px) {
+      .grid-2, .grid-3, .grid-4 { grid-template-columns: 1fr; }
+    }
+
+    /* Glass Cards */
+    .card {
+      background: var(--card-bg);
+      border: 1px solid var(--card-border);
+      border-radius: 16px;
+      padding: 1.5rem;
+      backdrop-filter: blur(16px);
+      box-shadow: 0 10px 30px rgba(0, 0, 0, 0.3);
+      margin-bottom: 1.5rem;
+    }
+
+    .card-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-bottom: 1.25rem;
+      padding-bottom: 0.75rem;
+      border-bottom: 1px solid var(--card-border);
+    }
+
+    .card-title {
+      font-family: var(--font-heading);
+      font-size: 1.15rem;
+      font-weight: 600;
+      display: flex;
+      align-items: center;
+      gap: 0.5rem;
+    }
+
+    /* Form Styles */
+    .form-group {
+      margin-bottom: 1rem;
+    }
+
+    .form-label {
+      display: block;
+      font-size: 0.85rem;
+      font-weight: 500;
+      color: var(--text-muted);
+      margin-bottom: 0.4rem;
+    }
+
+    .form-input, .form-select {
+      width: 100%;
+      padding: 0.75rem 1rem;
+      background: rgba(10, 14, 26, 0.6);
+      border: 1px solid var(--card-border);
+      border-radius: 10px;
+      color: var(--text-main);
+      font-family: var(--font-body);
+      font-size: 0.9rem;
+      transition: all 0.2s ease;
+    }
+
+    .form-input:focus, .form-select:focus {
+      outline: none;
+      border-color: var(--accent);
+      box-shadow: 0 0 12px var(--accent-glow);
+    }
+
+    .btn {
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      gap: 0.5rem;
+      padding: 0.75rem 1.5rem;
+      border-radius: 10px;
+      font-family: var(--font-body);
+      font-weight: 600;
+      font-size: 0.9rem;
+      border: none;
+      cursor: pointer;
+      transition: all 0.2s ease;
+    }
+
+    .btn-primary {
+      background: linear-gradient(135deg, var(--primary), #3b82f6);
+      color: #fff;
+      box-shadow: 0 4px 14px var(--primary-glow);
+    }
+
+    .btn-primary:hover {
+      transform: translateY(-1px);
+      box-shadow: 0 6px 20px var(--primary-glow);
+    }
+
+    .btn-accent {
+      background: linear-gradient(135deg, var(--accent), #0284c7);
+      color: #fff;
+      box-shadow: 0 4px 14px var(--accent-glow);
+    }
+
+    .btn-success {
+      background: linear-gradient(135deg, var(--success), #059669);
+      color: #fff;
+    }
+
+    /* Badges */
+    .badge {
+      display: inline-block;
+      padding: 0.25rem 0.75rem;
+      border-radius: 20px;
+      font-size: 0.75rem;
+      font-weight: 600;
+    }
+    .badge-success { background: rgba(16, 185, 129, 0.15); color: var(--success); border: 1px solid rgba(16, 185, 129, 0.3); }
+    .badge-warning { background: rgba(245, 158, 11, 0.15); color: var(--warning); border: 1px solid rgba(245, 158, 11, 0.3); }
+    .badge-danger { background: rgba(239, 68, 68, 0.15); color: var(--danger); border: 1px solid rgba(239, 68, 68, 0.3); }
+    .badge-info { background: rgba(6, 182, 212, 0.15); color: var(--accent); border: 1px solid rgba(6, 182, 212, 0.3); }
+
+    /* Tables */
+    .table-container {
+      overflow-x: auto;
+    }
+    table {
+      width: 100%;
+      border-collapse: collapse;
+      text-align: left;
+      font-size: 0.875rem;
+    }
+    th {
+      padding: 0.85rem 1rem;
+      background: rgba(255, 255, 255, 0.03);
+      color: var(--text-muted);
+      font-weight: 600;
+      border-bottom: 1px solid var(--card-border);
+    }
+    td {
+      padding: 0.85rem 1rem;
+      border-bottom: 1px solid var(--card-border);
+      color: var(--text-main);
+    }
+    tr:hover td {
+      background: rgba(255, 255, 255, 0.02);
+    }
+
+    /* Log Output Box */
+    .console-log {
+      background: #05070f;
+      border: 1px solid var(--card-border);
+      border-radius: 10px;
+      padding: 1rem;
+      font-family: 'Courier New', Courier, monospace;
+      font-size: 0.8rem;
+      color: #34d399;
+      max-height: 220px;
+      overflow-y: auto;
+      line-height: 1.5;
+    }
+    .console-line { margin-bottom: 0.3rem; }
+    .console-time { color: var(--text-muted); }
+  </style>
+</head>
+<body>
+
+  <header>
+    <div class="brand">
+      <div class="brand-logo">SMS</div>
+      <div>
+        <div class="brand-title">School Management System</div>
+        <div class="brand-subtitle">Zoho CRM & Zoho Creator Unified Platform Showcase</div>
+      </div>
+    </div>
+    <nav class="nav-tabs">
+      <button class="nav-btn active" onclick="switchTab('crm-webform')">📝 Webform Enquiries</button>
+      <button class="nav-btn" onclick="switchTab('crm-students')">🎓 CRM Student Operations</button>
+      <button class="nav-btn" onclick="switchTab('creator-portal')">👨‍👩‍👧 Parent Creator Portal</button>
+      <button class="nav-btn" onclick="switchTab('ews-engine')">⚡ Early Warning System (EWS)</button>
+    </nav>
+  </header>
+
+  <main>
+    <!-- TAB 1: CRM Webform Enquiries -->
+    <div id="crm-webform" class="tab-content active">
+      <div class="grid-2">
+        <div class="card">
+          <div class="card-header">
+            <div class="card-title">🌐 Live Admission Webform (Zoho CRM Webform Simulation)</div>
+            <span class="badge badge-info">Publishes to Leads Module</span>
+          </div>
+          <form id="admissionForm" onsubmit="handleWebformSubmit(event)">
+            <div class="grid-2">
+              <div class="form-group">
+                <label class="form-label">Student First Name *</label>
+                <input type="text" id="wfFirstName" class="form-input" value="Alexander" required>
+              </div>
+              <div class="form-group">
+                <label class="form-label">Student Last Name *</label>
+                <input type="text" id="wfLastName" class="form-input" value="Wright" required>
+              </div>
+            </div>
+            <div class="grid-2">
+              <div class="form-group">
+                <label class="form-label">Date of Birth *</label>
+                <input type="date" id="wfDob" class="form-input" value="2010-05-14" required>
+              </div>
+              <div class="form-group">
+                <label class="form-label">Grade Applying For *</label>
+                <select id="wfGrade" class="form-select">
+                  <option value="Grade 10" selected>Grade 10</option>
+                  <option value="Grade 11">Grade 11</option>
+                  <option value="Grade 12">Grade 12</option>
+                </select>
+              </div>
+            </div>
+            <div class="grid-2">
+              <div class="form-group">
+                <label class="form-label">Parent / Guardian Name *</label>
+                <input type="text" id="wfParentName" class="form-input" value="Robert Wright" required>
+              </div>
+              <div class="form-group">
+                <label class="form-label">Parent Email Address *</label>
+                <input type="email" id="wfEmail" class="form-input" value="robert.wright@example.com" required>
+              </div>
+            </div>
+            <div class="form-group">
+              <label class="form-label">Parent Phone Number *</label>
+              <input type="tel" id="wfPhone" class="form-input" value="+1 (555) 234-5678" required>
+            </div>
+            <button type="submit" class="btn btn-primary" style="width: 100%;">Submit Admission Enquiry</button>
+          </form>
+        </div>
+
+        <div class="card">
+          <div class="card-header">
+            <div class="card-title">📥 Leads Pipeline & Deluge Conversion Automation</div>
+            <span class="badge badge-success">Deluge Logic Active</span>
+          </div>
+          <p style="font-size: 0.85rem; color: var(--text-muted); margin-bottom: 1rem;">
+            Submitting the webform creates a record in the <strong>Leads Module</strong>. Clicking <strong>"Confirm Admission"</strong> executes the Deluge script: generating a unique Student ID (<code>STU-2025-XXXX</code>), creating the Parent Account, creating the Student record, and linking class & fee schedules.
+          </p>
+          
+          <div class="table-container" style="margin-bottom: 1rem;">
+            <table>
+              <thead>
+                <tr>
+                  <th>Enquiry Lead</th>
+                  <th>Grade</th>
+                  <th>Status</th>
+                  <th>Action</th>
+                </tr>
+              </thead>
+              <tbody id="leadsTableBody">
+                <!-- Dynamically populated -->
+              </tbody>
+            </table>
+          </div>
+
+          <div class="console-log" id="conversionLog">
+            <div class="console-line"><span class="console-time">[SYSTEM READY]</span> Deluge Admission Engine initialized. Waiting for enquiry...</div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- TAB 2: CRM Student Operations -->
+    <div id="crm-students" class="tab-content">
+      <div class="card">
+        <div class="card-header">
+          <div class="card-title">🎓 Zoho CRM - Master Students Directory</div>
+          <span class="badge badge-info">Real-time Calculated Metrics</span>
+        </div>
+        <div class="table-container">
+          <table>
+            <thead>
+              <tr>
+                <th>Student ID</th>
+                <th>Full Name</th>
+                <th>Class</th>
+                <th>Parent Email</th>
+                <th>Attendance %</th>
+                <th>Current GPA</th>
+                <th>Fee Status</th>
+                <th>Risk Category (EWS)</th>
+              </tr>
+            </thead>
+            <tbody id="studentsTableBody">
+              <!-- Dynamically populated -->
+            </tbody>
+          </table>
+        </div>
+      </div>
+
+      <div class="grid-2">
+        <div class="card">
+          <div class="card-header">
+            <div class="card-title">📅 Daily Attendance Logger</div>
+            <span class="badge badge-warning">Duplicate Record Shield</span>
+          </div>
+          <div class="form-group">
+            <label class="form-label">Select Student</label>
+            <select id="attStudentSelect" class="form-select"></select>
+          </div>
+          <div class="grid-2">
+            <div class="form-group">
+              <label class="form-label">Attendance Date</label>
+              <input type="date" id="attDate" class="form-input" value="2026-08-20">
+            </div>
+            <div class="form-group">
+              <label class="form-label">Status</label>
+              <select id="attStatus" class="form-select">
+                <option value="Present">Present</option>
+                <option value="Absent">Absent</option>
+                <option value="Late">Late</option>
+                <option value="Excused Absence">Excused Absence</option>
+              </select>
+            </div>
+          </div>
+          <button onclick="recordAttendance()" class="btn btn-accent" style="width: 100%;">Record Daily Attendance</button>
+        </div>
+
+        <div class="card">
+          <div class="card-header">
+            <div class="card-title">💳 Fee Installment Payment Logger</div>
+            <span class="badge badge-success">Auto Rollup</span>
+          </div>
+          <div class="form-group">
+            <label class="form-label">Select Student</label>
+            <select id="feeStudentSelect" class="form-select"></select>
+          </div>
+          <div class="grid-2">
+            <div class="form-group">
+              <label class="form-label">Installment Term</label>
+              <select id="feeInstallment" class="form-select">
+                <option value="Installment 1">Installment 1 ($750)</option>
+                <option value="Installment 2">Installment 2 ($750)</option>
+                <option value="Installment 3">Installment 3 ($750)</option>
+              </select>
+            </div>
+            <div class="form-group">
+              <label class="form-label">Amount Paid ($)</label>
+              <input type="number" id="feeAmount" class="form-input" value="750">
+            </div>
+          </div>
+          <button onclick="recordFeePayment()" class="btn btn-success" style="width: 100%;">Record Payment Receipt</button>
+        </div>
+      </div>
+    </div>
+
+    <!-- TAB 3: Parent Creator Portal -->
+    <div id="creator-portal" class="tab-content">
+      <div class="card">
+        <div class="card-header">
+          <div class="card-title">📱 Zoho Creator Parent Portal - Live View</div>
+          <div style="display: flex; align-items: center; gap: 0.5rem;">
+            <span style="font-size: 0.85rem; color: var(--text-muted);">Simulate Logged-in Parent:</span>
+            <select id="parentLoginSelect" class="form-select" style="width: 260px;" onchange="loadParentPortalView()">
+              <option value="robert.wright@example.com">Robert Wright (robert.wright@example.com)</option>
+              <option value="sarah.jenkins@example.com">Sarah Jenkins (sarah.jenkins@example.com)</option>
+            </select>
+          </div>
+        </div>
+
+        <!-- Creator Portal Embedded View -->
+        <div style="background: rgba(10, 14, 26, 0.9); border: 1px solid var(--card-border); border-radius: 12px; padding: 1.5rem;">
+          <div class="grid-4" style="margin-bottom: 1.5rem;">
+            <div style="background: rgba(255,255,255,0.04); padding: 1rem; border-radius: 10px; border: 1px solid var(--card-border);">
+              <div style="font-size: 0.75rem; color: var(--text-muted);">Student Name</div>
+              <div id="cpStudentName" style="font-size: 1.1rem; font-weight: 700; color: var(--accent); margin-top: 0.2rem;">-</div>
+            </div>
+            <div style="background: rgba(255,255,255,0.04); padding: 1rem; border-radius: 10px; border: 1px solid var(--card-border);">
+              <div style="font-size: 0.75rem; color: var(--text-muted);">Attendance Score</div>
+              <div id="cpAttendance" style="font-size: 1.1rem; font-weight: 700; color: var(--success); margin-top: 0.2rem;">-</div>
+            </div>
+            <div style="background: rgba(255,255,255,0.04); padding: 1rem; border-radius: 10px; border: 1px solid var(--card-border);">
+              <div style="font-size: 0.75rem; color: var(--text-muted);">Academic GPA</div>
+              <div id="cpGpa" style="font-size: 1.1rem; font-weight: 700; color: #3b82f6; margin-top: 0.2rem;">-</div>
+            </div>
+            <div style="background: rgba(255,255,255,0.04); padding: 1rem; border-radius: 10px; border: 1px solid var(--card-border);">
+              <div style="font-size: 0.75rem; color: var(--text-muted);">Outstanding Balance</div>
+              <div id="cpFeeBalance" style="font-size: 1.1rem; font-weight: 700; color: var(--warning); margin-top: 0.2rem;">-</div>
+            </div>
+          </div>
+
+          <div class="grid-2">
+            <div>
+              <h4 style="font-family: var(--font-heading); margin-bottom: 0.75rem; color: var(--text-main);">📊 Academic Report Card</h4>
+              <table style="background: rgba(0,0,0,0.2); border-radius: 8px; overflow: hidden;">
+                <thead>
+                  <tr>
+                    <th>Subject</th>
+                    <th>Score</th>
+                    <th>Grade</th>
+                    <th>Status</th>
+                  </tr>
+                </thead>
+                <tbody id="cpReportCardBody">
+                  <!-- Dynamically populated -->
+                </tbody>
+              </table>
+            </div>
+
+            <div>
+              <h4 style="font-family: var(--font-heading); margin-bottom: 0.75rem; color: var(--text-main);">💳 Fee Statement & Receipts</h4>
+              <table style="background: rgba(0,0,0,0.2); border-radius: 8px; overflow: hidden;">
+                <thead>
+                  <tr>
+                    <th>Receipt #</th>
+                    <th>Term</th>
+                    <th>Amount</th>
+                    <th>Status</th>
+                  </tr>
+                </thead>
+                <tbody id="cpFeeHistoryBody">
+                  <!-- Dynamically populated -->
+                </tbody>
+              </table>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- TAB 4: Early Warning System Engine -->
+    <div id="ews-engine" class="tab-content">
+      <div class="card">
+        <div class="card-header">
+          <div class="card-title">⚡ Additional Feature: Automated Early Warning System (EWS)</div>
+          <button onclick="runEWSEngineSimulation()" class="btn btn-primary">▶ Execute Weekly Scheduled EWS Engine</button>
+        </div>
+        <p style="font-size: 0.9rem; color: var(--text-muted); margin-bottom: 1.5rem;">
+          The EWS algorithm continuously evaluates student risk using weighted factors: <strong>Attendance Deficit (40%)</strong> + <strong>Academic GPA Deficit (40%)</strong> + <strong>Fee Default (20%)</strong>. For Moderate & High Risk students, it automatically logs counselor tasks and dispatches parent alerts.
+        </p>
+
+        <div class="grid-3" style="margin-bottom: 1.5rem;">
+          <div class="card" style="margin-bottom: 0; background: rgba(16, 185, 129, 0.08);">
+            <div style="font-size: 0.8rem; color: var(--text-muted);">Low Risk Tier (Score < 25)</div>
+            <div id="ewsLowCount" style="font-size: 1.8rem; font-weight: 700; color: var(--success); margin-top: 0.5rem;">0</div>
+          </div>
+          <div class="card" style="margin-bottom: 0; background: rgba(245, 158, 11, 0.08);">
+            <div style="font-size: 0.8rem; color: var(--text-muted);">Moderate Risk Tier (25 - 54)</div>
+            <div id="ewsModCount" style="font-size: 1.8rem; font-weight: 700; color: var(--warning); margin-top: 0.5rem;">0</div>
+          </div>
+          <div class="card" style="margin-bottom: 0; background: rgba(239, 68, 68, 0.08);">
+            <div style="font-size: 0.8rem; color: var(--text-muted);">High / Critical Risk Tier (>= 55)</div>
+            <div id="ewsHighCount" style="font-size: 1.8rem; font-weight: 700; color: var(--danger); margin-top: 0.5rem;">0</div>
+          </div>
+        </div>
+
+        <div class="console-log" id="ewsConsoleLog" style="max-height: 300px;">
+          <div class="console-line"><span class="console-time">[EWS SYSTEM]</span> Engine initialized. Click 'Execute Weekly Scheduled EWS Engine' to trigger assessment run.</div>
+        </div>
+      </div>
+    </div>
+  </main>
+
+  <script>
+    // State Store Simulation
+    const state = {
+      leads: [
+        {
+          id: 101,
+          name: "Alexander Wright",
+          email: "robert.wright@example.com",
+          parentName: "Robert Wright",
+          phone: "+1 (555) 234-5678",
+          grade: "Grade 10",
+          status: "New Enquiry"
+        },
+        {
+          id: 102,
+          name: "Emily Jenkins",
+          email: "sarah.jenkins@example.com",
+          parentName: "Sarah Jenkins",
+          phone: "+1 (555) 876-5432",
+          grade: "Grade 11",
+          status: "New Enquiry"
+        }
+      ],
+      students: [
+        {
+          id: "STU-2025-0001",
+          crmId: 201,
+          name: "Emily Jenkins",
+          email: "sarah.jenkins@example.com",
+          className: "Grade 11 - Section A",
+          attendancePct: 78.5,
+          gpa: 2.1,
+          totalFee: 3000,
+          paidFee: 750,
+          outstandingFee: 2250,
+          feeStatus: "Partially Paid",
+          riskScore: 62,
+          riskLevel: "High / Critical",
+          examResults: [
+            { subject: "Mathematics", marks: 54, max: 100, grade: "D", gpa: 1.0, status: "Pass" },
+            { subject: "Physics", marks: 48, max: 100, grade: "F", gpa: 0.0, status: "Fail" },
+            { subject: "English Literature", marks: 72, max: 100, grade: "B", gpa: 3.0, status: "Pass" }
+          ],
+          feeHistory: [
+            { receipt: "REC-9041", term: "Installment 1", amount: 750, status: "Success" }
+          ]
+        }
+      ]
+    };
+
+    function switchTab(tabId) {
+      document.querySelectorAll('.tab-content').forEach(el => el.classList.remove('active'));
+      document.querySelectorAll('.nav-btn').forEach(el => el.classList.remove('active'));
+      document.getElementById(tabId).classList.add('active');
+      event.currentTarget.classList.add('active');
+
+      if (tabId === 'crm-students') renderStudentsTable();
+      if (tabId === 'creator-portal') loadParentPortalView();
+      if (tabId === 'ews-engine') updateEWSStats();
+    }
+
+    function logConsole(elementId, msg) {
+      const el = document.getElementById(elementId);
+      const time = new Date().toLocaleTimeString();
+      el.innerHTML += `<div class="console-line"><span class="console-time">[${time}]</span> ${msg}</div>`;
+      el.scrollTop = el.scrollHeight;
+    }
+
+    function renderLeadsTable() {
+      const tbody = document.getElementById('leadsTableBody');
+      tbody.innerHTML = '';
+      state.leads.forEach(lead => {
+        tbody.innerHTML += `
+          <tr>
+            <td><strong>${lead.name}</strong><br><span style="font-size:0.75rem; color:var(--text-muted);">${lead.email}</span></td>
+            <td>${lead.grade}</td>
+            <td><span class="badge ${lead.status === 'Converted / Enrolled' ? 'badge-success' : 'badge-warning'}">${lead.status}</span></td>
+            <td>
+              ${lead.status !== 'Converted / Enrolled' 
+                ? `<button onclick="convertLead(${lead.id})" class="btn btn-primary" style="padding:0.4rem 0.8rem; font-size:0.75rem;">Confirm Admission</button>`
+                : `<span style="font-size:0.75rem; color:var(--success);">✓ Converted</span>`}
+            </td>
+          </tr>
+        `;
+      });
+    }
+
+    function handleWebformSubmit(e) {
+      e.preventDefault();
+      const firstName = document.getElementById('wfFirstName').value;
+      const lastName = document.getElementById('wfLastName').value;
+      const email = document.getElementById('wfEmail').value;
+      const parentName = document.getElementById('wfParentName').value;
+      const phone = document.getElementById('wfPhone').value;
+      const grade = document.getElementById('wfGrade').value;
+
+      const newLead = {
+        id: Date.now(),
+        name: `${firstName} ${lastName}`,
+        email,
+        parentName,
+        phone,
+        grade,
+        status: "New Enquiry"
+      };
+
+      state.leads.push(newLead);
+      renderLeadsTable();
+      logConsole('conversionLog', `Webform Enquiry received: Lead #${newLead.id} created for ${newLead.name} (${grade}).`);
+    }
+
+    function convertLead(leadId) {
+      const lead = state.leads.find(l => l.id === leadId);
+      if (!lead) return;
+
+      lead.status = "Converted / Enrolled";
+      const seq = (state.students.length + 1).toString().padStart(4, '0');
+      const studentId = `STU-2025-${seq}`;
+
+      const newStudent = {
+        id: studentId,
+        crmId: Date.now(),
+        name: lead.name,
+        email: lead.email,
+        className: `${lead.grade} - Section A`,
+        attendancePct: 100.0,
+        gpa: 3.8,
+        totalFee: 3000,
+        paidFee: 0,
+        outstandingFee: 3000,
+        feeStatus: "Pending Initial Fee",
+        riskScore: 5,
+        riskLevel: "Low",
+        examResults: [
+          { subject: "Mathematics", marks: 92, max: 100, grade: "A+", gpa: 4.0, status: "Pass" },
+          { subject: "Science", marks: 88, max: 100, grade: "A", gpa: 3.7, status: "Pass" },
+          { subject: "English Literature", marks: 95, max: 100, grade: "A+", gpa: 4.0, status: "Pass" }
+        ],
+        feeHistory: []
+      };
+
+      state.students.push(newStudent);
+      renderLeadsTable();
+      logConsole('conversionLog', `<span style="color:#34d399">DELUGE TRIGGERED: Created Parent Account (${lead.parentName}) & Master Student record [${studentId}].</span>`);
+    }
+
+    function renderStudentsTable() {
+      const tbody = document.getElementById('studentsTableBody');
+      const attSelect = document.getElementById('attStudentSelect');
+      const feeSelect = document.getElementById('feeStudentSelect');
+      
+      tbody.innerHTML = '';
+      attSelect.innerHTML = '';
+      feeSelect.innerHTML = '';
+
+      state.students.forEach(s => {
+        let riskBadge = 'badge-success';
+        if (s.riskLevel === 'Moderate') riskBadge = 'badge-warning';
+        if (s.riskLevel === 'High / Critical') riskBadge = 'badge-danger';
+
+        tbody.innerHTML += `
+          <tr>
+            <td><strong>${s.id}</strong></td>
+            <td>${s.name}</td>
+            <td>${s.className}</td>
+            <td>${s.email}</td>
+            <td><strong>${s.attendancePct}%</strong></td>
+            <td>${s.gpa} / 4.0</td>
+            <td><span class="badge ${s.feeStatus === 'Paid' ? 'badge-success' : 'badge-warning'}">${s.feeStatus} ($${s.outstandingFee} due)</span></td>
+            <td><span class="badge ${riskBadge}">${s.riskLevel} (${s.riskScore})</span></td>
+          </tr>
+        `;
+
+        attSelect.innerHTML += `<option value="${s.id}">${s.name} (${s.id})</option>`;
+        feeSelect.innerHTML += `<option value="${s.id}">${s.name} (${s.id})</option>`;
+      });
+    }
+
+    function recordAttendance() {
+      const sId = document.getElementById('attStudentSelect').value;
+      const status = document.getElementById('attStatus').value;
+      const student = state.students.find(s => s.id === sId);
+      if (student) {
+        if (status === 'Absent') student.attendancePct = Math.max(0, (student.attendancePct - 4.2)).toFixed(1);
+        if (status === 'Present') student.attendancePct = Math.min(100, (parseFloat(student.attendancePct) + 0.5)).toFixed(1);
+        renderStudentsTable();
+        alert(`Attendance recorded for ${student.name}. Recalculated Attendance %: ${student.attendancePct}%`);
+      }
+    }
+
+    function recordFeePayment() {
+      const sId = document.getElementById('feeStudentSelect').value;
+      const amt = parseFloat(document.getElementById('feeAmount').value);
+      const installment = document.getElementById('feeInstallment').value;
+      const student = state.students.find(s => s.id === sId);
+      if (student) {
+        student.paidFee += amt;
+        student.outstandingFee = Math.max(0, student.totalFee - student.paidFee);
+        if (student.outstandingFee === 0) student.feeStatus = "Paid";
+        else student.feeStatus = "Partially Paid";
+
+        student.feeHistory.push({
+          receipt: `REC-${Math.floor(1000 + Math.random() * 9000)}`,
+          term: installment,
+          amount: amt,
+          status: "Success"
+        });
+
+        renderStudentsTable();
+        alert(`Payment of $${amt} recorded! Outstanding balance updated to $${student.outstandingFee}.`);
+      }
+    }
+
+    function loadParentPortalView() {
+      const selectedEmail = document.getElementById('parentLoginSelect').value;
+      const student = state.students.find(s => s.email === selectedEmail) || state.students[0];
+
+      if (student) {
+        document.getElementById('cpStudentName').innerText = `${student.name} (${student.id})`;
+        document.getElementById('cpAttendance').innerText = `${student.attendancePct}%`;
+        document.getElementById('cpGpa').innerText = `${student.gpa} / 4.0`;
+        document.getElementById('cpFeeBalance').innerText = `$${student.outstandingFee}`;
+
+        const reportBody = document.getElementById('cpReportCardBody');
+        reportBody.innerHTML = '';
+        student.examResults.forEach(res => {
+          reportBody.innerHTML += `
+            <tr>
+              <td>${res.subject}</td>
+              <td>${res.marks} / ${res.max}</td>
+              <td><strong>${res.grade}</strong></td>
+              <td><span class="badge ${res.status === 'Pass' ? 'badge-success' : 'badge-danger'}">${res.status}</span></td>
+            </tr>
+          `;
+        });
+
+        const feeBody = document.getElementById('cpFeeHistoryBody');
+        feeBody.innerHTML = '';
+        if (student.feeHistory.length === 0) {
+          feeBody.innerHTML = '<tr><td colspan="4" style="text-align:center; color:var(--text-muted);">No payment records found.</td></tr>';
+        } else {
+          student.feeHistory.forEach(f => {
+            feeBody.innerHTML += `
+              <tr>
+                <td><strong>${f.receipt}</strong></td>
+                <td>${f.term}</td>
+                <td>$${f.amount}</td>
+                <td><span class="badge badge-success">${f.status}</span></td>
+              </tr>
+            `;
+          });
+        }
+      }
+    }
+
+    function updateEWSStats() {
+      let low = 0, mod = 0, high = 0;
+      state.students.forEach(s => {
+        if (s.riskLevel === 'Low') low++;
+        if (s.riskLevel === 'Moderate') mod++;
+        if (s.riskLevel === 'High / Critical') high++;
+      });
+      document.getElementById('ewsLowCount').innerText = low;
+      document.getElementById('ewsModCount').innerText = mod;
+      document.getElementById('ewsHighCount').innerText = high;
+    }
+
+    function runEWSEngineSimulation() {
+      logConsole('ewsConsoleLog', '<span style="color:#06b6d4">================= EWS SCHEDULED RUN STARTED =================</span>');
+      state.students.forEach(s => {
+        let score = 0;
+        if (s.attendancePct < 85) score += Math.min(40, Math.round((85 - s.attendancePct) * 1.5));
+        if (s.gpa < 2.5) score += Math.min(40, Math.round((2.5 - s.gpa) * 16));
+        if (s.feeStatus === 'Overdue' || (s.outstandingFee / s.totalFee) > 0.5) score += 20;
+
+        s.riskScore = score;
+        if (score >= 55) s.riskLevel = 'High / Critical';
+        else if (score >= 25) s.riskLevel = 'Moderate';
+        else s.riskLevel = 'Low';
+
+        logConsole('ewsConsoleLog', `Evaluated ${s.name} (${s.id}): Score = ${score}/100 -> Category: ${s.riskLevel}`);
+
+        if (s.riskLevel === 'High / Critical' || s.riskLevel === 'Moderate') {
+          logConsole('ewsConsoleLog', `<span style="color:#ef4444">⚠️ TRIGGERED WORKFLOW: Created Counselor Task for ${s.name} & sent Alert Email to ${s.email}</span>`);
+        }
+      });
+      logConsole('ewsConsoleLog', '<span style="color:#34d399">================= EWS SCHEDULED RUN COMPLETED =================</span>');
+      updateEWSStats();
+    }
+
+    // Initialize Page
+    renderLeadsTable();
+  </script>
+</body>
+</html>

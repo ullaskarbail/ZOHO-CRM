@@ -1,0 +1,48 @@
+{
+  "application_name": "Parent Hub - School Portal",
+  "version": "2.0.0",
+  "platform": "Zoho Creator",
+  "target_audience": "Parents & Guardians",
+  "data_architecture": "Dynamic Hybrid Sync via Zoho CRM REST APIs & Real-time Deluge Integration",
+  "security_model": {
+    "authentication": "Zoho Creator Portal User Authentication",
+    "authorization": "Row-level Security filtered strictly by logged-in parent email (zoho.loginuserid / Parent_Email)",
+    "isolation_rule": "Parents can exclusively view records matching Parent_Email == zoho.loginuserid"
+  },
+  "pages": [
+    {
+      "page_name": "Parent_Dashboard",
+      "display_title": "Student Overview & Dashboard",
+      "components": [
+        { "type": "StatCard", "name": "Attendance_Gauge", "data_source": "CRM.Students.Attendance_Percentage" },
+        { "type": "StatCard", "name": "Current_GPA_Card", "data_source": "CRM.Students.Current_GPA" },
+        { "type": "StatCard", "name": "Outstanding_Fee_Card", "data_source": "CRM.Students.Outstanding_Fee_Balance" },
+        { "type": "StatCard", "name": "Risk_Level_Badge", "data_source": "CRM.Students.Early_Warning_Level" }
+      ]
+    },
+    {
+      "page_name": "Attendance_Calendar",
+      "display_title": "Attendance & Absence History",
+      "components": [
+        { "type": "CalendarView", "name": "Monthly_Attendance_Grid", "data_source": "CRM.Daily_Attendance" }
+      ]
+    },
+    {
+      "page_name": "Examination_Report_Card",
+      "display_title": "Academic Performance & Report Card",
+      "components": [
+        { "type": "DataTable", "name": "Subject_Marks_Table", "data_source": "CRM.Student_Exam_Results" },
+        { "type": "BarChart", "name": "Subject_Score_Comparison", "data_source": "CRM.Student_Exam_Results" }
+      ]
+    },
+    {
+      "page_name": "Fee_Payment_Portal",
+      "display_title": "Fee Breakdown & Online Payments",
+      "components": [
+        { "type": "InvoiceSummary", "name": "Fee_Schedule_Card", "data_source": "CRM.Fee_Structures" },
+        { "type": "DataTable", "name": "Payment_Receipts_History", "data_source": "CRM.Fee_Payments" },
+        { "type": "PaymentForm", "name": "Pay_Installment_Action", "action": "Triggers Deluge Integration to Record CRM Fee_Payment" }
+      ]
+    }
+  ]
+}

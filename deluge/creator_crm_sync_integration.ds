@@ -1,0 +1,124 @@
+/*
+  ========================================================================================
+  Zoho Creator Deluge Script: Real-Time Zoho CRM Parent Data Retrieval & Security Isolation
+  Location: Page On Load / Widget Script in Zoho Creator Parent Application
+  Description: Authenticates logged-in parent email against Zoho CRM Students module.
+               Retrieves Student Profile, Class Info, Attendance, Exam Marks, and Fee Balance.
+  ========================================================================================
+*/
+
+Map fetchParentChildDataFromCRM()
+{
+    responseMap = Map();
+    
+    // 1. Get Logged-In Creator Parent Email
+    parentEmail = zoho.loginuserid;
+    
+    // Fallback for testing / preview environment
+    if (parentEmail == null || parentEmail == "")
+    {
+        parentEmail = "parent.johnson@example.com";
+    }
+    
+    // 2. Query CRM Students Module using Parent_Email criteria (Row-level security filter)
+    crmStudentSearch = zoho.crm.searchRecords("Students", "(Parent_Email:equals:" + parentEmail + ")");
+    
+    if (crmStudentSearch.size() > 0)
+    {
+        studentObj = crmStudentSearch.get(0);
+        studentCRMId = studentObj.get("id");
+        studentIdCode = studentObj.get("Student_ID");
+        studentFullName = studentObj.get("Full_Name");
+        dob = studentObj.get("Date_of_Birth");
+        attendancePct = studentObj.get("Attendance_Percentage");
+        currentGpa = studentObj.get("Current_GPA");
+        totalFee = studentObj.get("Total_Fee_Amount");
+        paidFee = studentObj.get("Fee_Paid_Amount");
+        outstandingFee = studentObj.get("Outstanding_Fee_Balance");
+        feeStatus = studentObj.get("Fee_Status");
+        riskLevel = studentObj.get("Early_Warning_Level");
+        
+        // Fetch Class Name
+        classObj = studentObj.get("Current_Class");
+        className = "Unassigned";
+        if (classObj != null)
+        {
+            className = classObj.get("name");
+        }
+        
+        // Build Student Profile Package
+        profileMap = Map();
+        profileMap.put("student_id", studentIdCode);
+        profileMap.put("name", studentFullName);
+        profileMap.put("date_of_birth", dob);
+        profileMap.put("class", className);
+        profileMap.put("attendance_pct", attendancePct);
+        profileMap.put("current_gpa", currentGpa);
+        profileMap.put("total_fee", totalFee);
+        profileMap.put("paid_fee", paidFee);
+        profileMap.put("outstanding_fee", outstandingFee);
+        profileMap.put("fee_status", feeStatus);
+        profileMap.put("risk_level", riskLevel);
+        
+        responseMap.put("student_profile", profileMap);
+        
+        // 3. Retrieve Attendance History (Last 30 Logs)
+        attendanceList = List();
+        attendanceSearch = zoho.crm.searchRecords("Daily_Attendance", "(Student:equals:" + studentCRMId + ")", 1, 30);
+        for each att in attendanceSearch
+        {
+            attMap = Map();
+            attMap.put("date", att.get("Attendance_Date"));
+            attMap.put("status", att.get("Status"));
+            attMap.put("remarks", att.get("Remarks"));
+            attendanceList.add(attMap);
+        }
+        responseMap.put("attendance_history", attendanceList);
+        
+        // 4. Retrieve Examination Results
+        examList = List();
+        examSearch = zoho.crm.searchRecords("Student_Exam_Results", "(Student:equals:" + studentCRMId + ")");
+        for each res in examSearch
+        {
+            subjectObj = res.get("Subject");
+            subjectName = "Subject";
+            if (subjectObj != null) { subjectName = subjectObj.get("name"); }
+            
+            resMap = Map();
+            resMap.put("subject", subjectName);
+            resMap.put("marks_obtained", res.get("Marks_Obtained"));
+            resMap.put("max_marks", res.get("Max_Marks"));
+            resMap.put("pct_score", res.get("Percentage_Score"));
+            resMap.put("grade", res.get("Grade"));
+            resMap.put("gpa_point", res.get("GPA_Point"));
+            resMap.put("status", res.get("Pass_Fail_Status"));
+            examList.add(resMap);
+        }
+        responseMap.put("exam_results", examList);
+        
+        // 5. Retrieve Fee Payment Receipts History
+        paymentList = List();
+        paymentSearch = zoho.crm.searchRecords("Fee_Payments", "(Student:equals:" + studentCRMId + ")");
+        for each pay in paymentSearch
+        {
+            payMap = Map();
+            payMap.put("receipt_no", pay.get("Payment_Reference"));
+            payMap.put("installment", pay.get("Installment_Number"));
+            payMap.put("amount", pay.get("Amount_Paid"));
+            payMap.put("date", pay.get("Payment_Date"));
+            payMap.put("mode", pay.get("Payment_Mode"));
+            payMap.put("status", pay.get("Transaction_Status"));
+            paymentList.add(payMap);
+        }
+        responseMap.put("payment_history", paymentList);
+        
+        responseMap.put("status", "SUCCESS");
+    }
+    else
+    {
+        responseMap.put("status", "ERROR");
+        responseMap.put("message", "No student record associated with email: " + parentEmail);
+    }
+    
+    return responseMap;
+}
